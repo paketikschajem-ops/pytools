@@ -30,7 +30,7 @@ jobs:
         with:
           packages: platform-tools
 
-      - name: Accept Android SDK and NDK licenses
+      - name: Install Android SDK packages
         run: |
           java -version
           yes | sdkmanager --licenses > /dev/null || true
@@ -45,6 +45,21 @@ jobs:
         run: |
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install buildozer cython==0.29.36
+
+      - name: Initialize Buildozer Android SDK
+        run: |
+          buildozer android update || true
+
+      - name: Accept Buildozer SDK licenses
+        run: |
+          SDK="$HOME/.buildozer/android/platform/android-sdk"
+          if [ -x "$SDK/tools/bin/sdkmanager" ]; then
+            yes | "$SDK/tools/bin/sdkmanager" --sdk_root="$SDK" --licenses > /dev/null || true
+            "$SDK/tools/bin/sdkmanager" --sdk_root="$SDK" "platform-tools" "platforms;android-35" "build-tools;37.0.0" || true
+          fi
+          if [ -d "$SDK/licenses" ]; then
+            find "$SDK/licenses" -type f -print
+          fi
 
       - name: Build debug APK
         env:

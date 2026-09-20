@@ -46,20 +46,10 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install buildozer cython==0.29.36
 
-      - name: Initialize Buildozer Android SDK
+      - name: Clean Android build cache
         run: |
-          buildozer android update || true
-
-      - name: Accept Buildozer SDK licenses
-        run: |
-          SDK="$HOME/.buildozer/android/platform/android-sdk"
-          if [ -x "$SDK/tools/bin/sdkmanager" ]; then
-            yes | "$SDK/tools/bin/sdkmanager" --sdk_root="$SDK" --licenses > /dev/null || true
-            "$SDK/tools/bin/sdkmanager" --sdk_root="$SDK" "platform-tools" "platforms;android-35" "build-tools;37.0.0" || true
-          fi
-          if [ -d "$SDK/licenses" ]; then
-            find "$SDK/licenses" -type f -print
-          fi
+          rm -rf .buildozer
+          rm -rf ~/.buildozer/android/platform/build-*
 
       - name: Build debug APK
         env:

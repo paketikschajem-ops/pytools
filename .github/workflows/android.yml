@@ -55,12 +55,41 @@ jobs:
           rm -rf ~/.buildozer/android/platform/python-for-android
           rm -rf ~/.buildozer/android/platform/python-for-android-new
 
+      - name: Prepare python-for-android
+        run: |
+          buildozer android update
+          P4A_DIR="$HOME/.buildozer/android/platform/python-for-android"
+          test -f "$P4A_DIR/pythonforandroid/build.py"
+          python - "$P4A_DIR/pythonforandroid/build.py" <<'PY'
+          import pathlib
+          import sys
+
+          path = pathlib.Path(sys.argv[1])
+          text = path.read_text()
+
+          if "--clear', 'venv" in text or "--clear\", \"venv" in text:
+              print("p4a venv already uses --clear")
+              raise SystemExit(0)
+
+          old = "'-m', 'venv', 'venv'"
+          new = "'-m', 'venv', '--clear', 'venv'"
+
+          if old not in text:
+              raise SystemExit("Could not find p4a venv creation line to patch")
+
+          path.write_text(text.replace(old, new))
+          print("Patched p4a temporary venv creation to use --clear")
+          PY
+
+      - name: Verify p4a patch
+        run: |
+          grep -n -A2 -B2 "venv" "$HOME/.buildozer/android/platform/python-for-android/pythonforandroid/build.py" | head -40
+
       - name: Build debug APK
         env:
           ANDROID_HOME: ${{ env.ANDROID_HOME }}
           ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
           JAVA_HOME: ${{ env.JAVA_HOME }}
-          PIP_VERSION: "24.3.1"
         run: buildozer android debug
 
       - name: Upload APK

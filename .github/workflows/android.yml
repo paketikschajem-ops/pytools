@@ -43,19 +43,24 @@ jobs:
 
       - name: Install Python build tools
         run: |
-          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install --upgrade pip
+          python -m pip install pip==24.3.1 setuptools==75.8.0 wheel==0.45.1
           python -m pip install buildozer cython==0.29.36
+          python -m pip --version
 
       - name: Clean Android build cache
         run: |
           rm -rf .buildozer
           rm -rf ~/.buildozer/android/platform/build-*
+          rm -rf ~/.buildozer/android/platform/python-for-android
+          rm -rf ~/.buildozer/android/platform/python-for-android-new
 
       - name: Build debug APK
         env:
           ANDROID_HOME: ${{ env.ANDROID_HOME }}
           ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
           JAVA_HOME: ${{ env.JAVA_HOME }}
+          PIP_VERSION: "24.3.1"
         run: buildozer android debug
 
       - name: Upload APK
